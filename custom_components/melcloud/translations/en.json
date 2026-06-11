@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "MELCloud",
+        "description": "This custom integration keeps the melcloud domain and reuses the existing MELCloud config entry."
+      }
+    },
+    "abort": {
+      "existing_core_entry_required": "This custom integration reuses the existing MELCloud config entry and does not ask for credentials again."
+    }
+  }
+}
