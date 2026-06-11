@@ -1,50 +1,50 @@
-# MELCloud Flow Control per Home Assistant
+# MELCloud Flow Control for Home Assistant
 
-Custom integration Home Assistant installabile via HACS, basata sulla core integration `melcloud`, pensata per Mitsubishi Ecodan Air-To-Water gestiti tramite MELCloud.
+Custom integration for Home Assistant installable via HACS, based on the core `melcloud` integration, designed for Mitsubishi Ecodan Air-To-Water units managed through MELCloud.
 
-## Importante: domain e config entry esistente
+## Important: domain and existing config entry
 
-Questa custom integration mantiene volutamente:
+This custom integration intentionally keeps:
 
 ```json
 "domain": "melcloud"
 ```
 
-La struttura resta `custom_components/melcloud/`, come la core integration di Home Assistant. In questo modo Home Assistant continua a usare la config entry MELCloud gia esistente in:
+The directory structure stays `custom_components/melcloud/`, matching the Home Assistant core integration. This way Home Assistant continues using the existing MELCloud config entry located at:
 
 ```text
 /config/.storage/core.config_entries
 ```
 
-Non deve chiedere nuovamente username, password o token. La custom integration riusa i dati gia configurati dalla precedente integrazione ufficiale. Non inserire token, password o dati personali nella repo.
+No username, password, or token is requested again. The custom integration reuses the data already configured by the previous official integration. Do not include tokens, passwords, or personal data in the repo.
 
-## Cosa cambia
+## What changes
 
-Questa versione modded della core integration `melcloud` cambia il comportamento delle climate zone ATW/Ecodan:
+This modded version of the core `melcloud` integration changes how ATW/Ecodan climate zones behave:
 
-- la target temperature della climate zone diventa la temperatura di mandata reale;
-- `climate.casa_zone_1` comanda `SetCoolFlowTemperatureZone1` oppure `SetHeatFlowTemperatureZone1`;
-- `climate.agrinido_zone_1` usa la stessa logica;
-- la logica vale in generale per le zone ATW MELCloud;
-- la parte ATA air-to-air non viene modificata.
+- the climate zone target temperature becomes the real flow temperature;
+- `climate.casa_zone_1` controls `SetCoolFlowTemperatureZone1` or `SetHeatFlowTemperatureZone1`;
+- `climate.agrinido_zone_1` uses the same logic;
+- the logic applies to all MELCloud ATW zones in general;
+- the ATA air-to-air part is not modified.
 
-La patch su `pymelcloud` non modifica `site-packages`: viene applicata a runtime in modo idempotente dentro `custom_components/melcloud/__init__.py`.
+The `pymelcloud` patch does not modify `site-packages`: it is applied at runtime idempotently inside `custom_components/melcloud/__init__.py`.
 
 ## Polling
 
-L'integrazione usa il normale `DataUpdateCoordinator` di Home Assistant con aggiornamento interno ogni 8 minuti. Non serve creare automazioni con `homeassistant.update_entity` e non serve ricaricare l'integrazione periodicamente.
+The integration uses the standard Home Assistant `DataUpdateCoordinator` with an internal update every 8 minutes. No need to create automations with `homeassistant.update_entity` or periodically reload the integration.
 
-## Installazione via HACS
+## Installation via HACS
 
-1. Pubblica questa cartella come repository GitHub.
-2. In HACS apri i custom repository.
-3. Aggiungi l'URL della repo come integration.
-4. Installa `MELCloud Flow Control`.
-5. Riavvia Home Assistant.
+1. Publish this folder as a GitHub repository.
+2. In HACS, open custom repositories.
+3. Add the repo URL as an integration.
+4. Install `MELCloud Flow Control`.
+5. Restart Home Assistant.
 
-Dopo il riavvio, Home Assistant deve caricare `custom_components/melcloud` al posto della core integration ufficiale.
+After the restart, Home Assistant should load `custom_components/melcloud` instead of the official core integration.
 
-## Esempi di servizio
+## Service examples
 
 Casa:
 
@@ -66,11 +66,11 @@ data:
   temperature: 18
 ```
 
-## Test manuali consigliati
+## Recommended manual tests
 
-1. Dopo installazione HACS e riavvio, verifica nei log che Home Assistant carichi `custom_components/melcloud`.
-2. Verifica `climate.casa_zone_1`: in estate/raffrescamento il target deve coincidere con `SetCoolFlowTemperatureZone1`.
-3. Chiama:
+1. After HACS installation and restart, check the logs that Home Assistant loads `custom_components/melcloud`.
+2. Verify `climate.casa_zone_1`: in summer/cooling mode the target should match `SetCoolFlowTemperatureZone1`.
+3. Call:
 
 ```yaml
 action: climate.set_temperature
@@ -80,9 +80,9 @@ data:
   temperature: 24
 ```
 
-Poi verifica da MELCloud web/app che la mandata Casa cambi.
+Then verify from MELCloud web/app that the Casa flow temperature changes.
 
-4. Ripeti per Agrinido:
+4. Repeat for Agrinido:
 
 ```yaml
 action: climate.set_temperature
@@ -92,7 +92,7 @@ data:
   temperature: 18
 ```
 
-5. Verifica che i sensori MELCloud non siano piu `Non disponibile`, in particolare:
+5. Verify that MELCloud sensors are no longer `Unavailable`, in particular:
 
 - `sensor.casa_temperatura_di_flusso`
 - `sensor.casa_return_temperature`
@@ -101,6 +101,6 @@ data:
 - `sensor.agrinido_temperatura_di_flusso`
 - `sensor.agrinido_return_temperature`
 
-## Note
+## Notes
 
-Questa integrazione non e ufficiale Mitsubishi. Sovrascrive la core integration `melcloud` tramite custom component, quindi gli aggiornamenti di Home Assistant potrebbero cambiare la core integration originale. Mantieni questo fork allineato quando aggiorni Home Assistant.
+This integration is not official Mitsubishi. It overrides the core `melcloud` integration through a custom component, so Home Assistant updates may change the original core integration. Keep this fork aligned when updating Home Assistant.
