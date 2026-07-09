@@ -25,6 +25,8 @@ This modded version of the core `melcloud` integration changes how ATW/Ecodan cl
 - the climate zone target temperature becomes the real flow temperature;
 - `climate.casa_zone_1` controls `SetCoolFlowTemperatureZone1` or `SetHeatFlowTemperatureZone1`;
 - `climate.agrinido_zone_1` uses the same logic;
+- ATW devices expose a real `Power` binary sensor;
+- ATW devices can be turned on or off through the `melcloud.set_atw_power` service;
 - the logic applies to all MELCloud ATW zones in general;
 - the ATA air-to-air part is not modified.
 
@@ -64,6 +66,28 @@ target:
   entity_id: climate.agrinido_zone_1
 data:
   temperature: 18
+```
+
+Turn ATW devices on:
+
+```yaml
+action: melcloud.set_atw_power
+data:
+  device_name:
+    - Casa
+    - Agrinido
+  power: true
+```
+
+Turn ATW devices off:
+
+```yaml
+action: melcloud.set_atw_power
+data:
+  device_name:
+    - Casa
+    - Agrinido
+  power: false
 ```
 
 ## Recommended manual tests

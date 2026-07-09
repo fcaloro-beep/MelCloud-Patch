@@ -31,6 +31,13 @@ class MelcloudBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 ATW_BINARY_SENSORS: tuple[MelcloudBinarySensorEntityDescription, ...] = (
     MelcloudBinarySensorEntityDescription(
+        key="power",
+        translation_key="power",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_fn=lambda data: data.device.power,
+        enabled=lambda data: data.device.power is not None,
+    ),
+    MelcloudBinarySensorEntityDescription(
         key="boiler_status",
         translation_key="boiler_status",
         device_class=BinarySensorDeviceClass.RUNNING,

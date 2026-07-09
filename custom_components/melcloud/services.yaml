@@ -21,3 +21,18 @@ set_vane_vertical:
       example: "auto"
       selector:
         text:
+
+set_atw_power:
+  fields:
+    device_name:
+      required: true
+      example:
+        - Casa
+        - Agrinido
+      selector:
+        object:
+    power:
+      required: true
+      example: true
+      selector:
+        boolean:

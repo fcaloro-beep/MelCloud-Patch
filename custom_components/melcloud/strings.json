@@ -26,6 +26,9 @@
       "immersion_heater_status": {
         "name": "Immersion heater"
       },
+      "power": {
+        "name": "Power"
+      },
       "valve_2way_status": {
         "name": "2-way valve"
       },
@@ -116,6 +119,20 @@
         }
       },
       "name": "Set vane vertical"
+    },
+    "set_atw_power": {
+      "description": "Turns one or more MELCloud Air-To-Water devices on or off.",
+      "fields": {
+        "device_name": {
+          "description": "MELCloud ATW device name, for example Casa or Agrinido.",
+          "name": "Device name"
+        },
+        "power": {
+          "description": "Power state to send to the MELCloud ATW device.",
+          "name": "Power"
+        }
+      },
+      "name": "Set ATW power"
     }
   }
 }

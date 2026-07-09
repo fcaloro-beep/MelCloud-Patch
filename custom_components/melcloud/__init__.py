@@ -12,6 +12,7 @@ from typing import Any
 from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import get_devices
 from pymelcloud.atw_device import AtwDevice, Zone
+import voluptuous as vol
 
 try:
     from pymelcloud.atw_device import EFFECTIVE_FLAGS
@@ -23,9 +24,12 @@ from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service import ServiceCall
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .const import DOMAIN
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +46,17 @@ PROPERTY_ZONE_2_FLOW_TEMPERATURE = "zone_2_flow_temperature"
 
 _FLOW_TEMPERATURE_FLAG = 0x1000004000020
 _COOLING_OPERATION_MODES = {3, 4}
+
+ATTR_DEVICE_NAME = "device_name"
+ATTR_POWER = "power"
+SERVICE_SET_ATW_POWER = "set_atw_power"
+
+SET_ATW_POWER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_NAME): vol.Any(cv.string, [cv.string]),
+        vol.Required(ATTR_POWER): cv.boolean,
+    }
+)
 
 
 def _state_value(state: dict[str, Any], key: str, default: Any = None) -> Any:
@@ -233,6 +248,55 @@ def _apply_pymelcloud_patches() -> None:
     _patch_atw_sensor_compatibility()
 
 
+async def _async_set_atw_power(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Set MELCloud ATW device power by device name."""
+    requested_names = call.data[ATTR_DEVICE_NAME]
+    if isinstance(requested_names, str):
+        requested_names = [requested_names]
+
+    names = {name.casefold() for name in requested_names}
+    power = call.data[ATTR_POWER]
+    matched = set()
+
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        coordinators_by_type = getattr(entry, "runtime_data", {}) or {}
+        for coordinators in coordinators_by_type.values():
+            for coordinator in coordinators:
+                device = coordinator.device
+                if not isinstance(device, AtwDevice):
+                    continue
+
+                device_name = getattr(device, "name", "")
+                if device_name.casefold() not in names:
+                    continue
+
+                matched.add(device_name.casefold())
+                await coordinator.async_set({"power": power})
+
+    missing = names - matched
+    if missing:
+        _LOGGER.warning(
+            "MELCloud ATW power service did not find device(s): %s",
+            ", ".join(sorted(missing)),
+        )
+
+
+def _async_register_services(hass: HomeAssistant) -> None:
+    """Register custom MELCloud services."""
+    if hass.services.has_service(DOMAIN, SERVICE_SET_ATW_POWER):
+        return
+
+    async def async_handle_set_atw_power(call: ServiceCall) -> None:
+        await _async_set_atw_power(hass, call)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_ATW_POWER,
+        async_handle_set_atw_power,
+        schema=SET_ATW_POWER_SCHEMA,
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
     """Establish connection with MELCloud."""
     _apply_pymelcloud_patches()
@@ -281,6 +345,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
             )
 
     entry.runtime_data = coordinators
+    _async_register_services(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
